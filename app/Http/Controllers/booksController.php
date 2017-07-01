@@ -8,29 +8,19 @@ use App\Book;
 use App\Section;
 use App\Author;
 use DB;
+use App\Http\Requests\BookRequest;
 
 class booksController extends Controller
 {
-   
+
     public function index()
     {
-
-     $books =DB::table('books')
-     ->join('authors', 'authors.id', '=', 'books.author_id')
-       ->join('sections', 'sections.id', '=', 'books.section_id')
-       ->select('books.id','books.name','books.price','sections.sname','authors.aname')
-       ->simplePaginate(6);
-       
-            return View('mainPage')
-           ->with('books', $books);   
-
-         /*  $books=Book::all();    
-            $sections=Section::all();   
-             $authors=Author::all();  
-              return View('mainPage')
-           ->with('books', $books)
-           ->with('sections', $sections)
-           ->with('authors', $authors) ; */
+       $books =  DB::table('books')
+                   ->join('authors', 'authors.id', '=', 'books.author_id')
+                   ->join('sections', 'sections.id', '=', 'books.section_id')
+                   ->select('books.id','books.name','books.price','sections.sname','authors.aname')
+                   ->paginate(6);
+       return View('mainPage', compact('books'));
     }
 
     /**
@@ -49,33 +39,14 @@ class booksController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(BookRequest $request)
     {
-            $validator = Validator::make($request->all(), [
-            'name' => 'required|unique:books',
-            'price' => 'required',
-             'author' => 'required',
-              'section' => 'required',
-         
-        ]);
+       $book=new Book();
+       $book->formstore($request);
+       return redirect('books');
+    }
 
-  if ($validator->fails()) {
-            return redirect('books.books-new')
-                        ->withErrors($validator);               
-        }
-        else{
 
-          //    $section=$request->input('section');
-           //    $author=$request->input('author');
-     
-     
-             $book=new Book(); 
-           $book->formstore($request);
-           return redirect('books');
-       }
-   }
-      
-    
 
     /**
      * Display the specified resource.
@@ -96,18 +67,12 @@ class booksController extends Controller
      */
     public function edit($id)
     {
-        $book=Book::find($id);
-
-    $secid= $book->section_id;
-    $authid= $book->author_id;
-$sname=DB::table('sections')->where('id',$secid)->value('sname');
-$aname=DB::table('authors')->where('id',$authid)->value('aname');
-
-        return View('books.books-edit')
-           ->with('book', $book)
-           ->with('sname', $sname)
-           ->with('aname', $aname);
-         
+        $book = DB::table('books')->where('books.id', $id)
+                                  ->join('authors', 'authors.id', '=', 'books.author_id')
+                                  ->join('sections', 'sections.id', '=', 'books.section_id')
+                                  ->select('books.id','books.name','books.price','sections.sname','authors.aname')
+                                  ->first();
+        return View('books.books-edit', compact('book'));
     }
 
     /**
@@ -119,22 +84,17 @@ $aname=DB::table('authors')->where('id',$authid)->value('aname');
      */
     public function update(Request $request, $id)
     {
-              $book = Book::find($id);
-            $book->name  = $request->Input('name');     
-            $book->price = $request->Input('price');
+      $book = Book::findOrFail($id);
+      $book->name  = $request->name;
+      $book->price = $request->price;
+      $sid=DB::table('sections')->where('sname',$request->section)->value('id');
+      $aid=DB::table('authors')->where('aname',$request->author)->value('id');
+      $book->section_id=$sid;
+      $book->author_id=$aid;
+      $book->save();
+      return redirect('books');
 
-$section=$request->input('section');
 
-$author=$request->input('author');
-
-$sid=DB::table('sections')->where('sname',$section)->value('id');
-$aid=DB::table('authors')->where('aname',$author)->value('id');
-
-         $book->section_id=$sid;
-         $book->author_id=$aid;
-            $book->save();
-            // redirect
-            return redirect('books');
     }
 
     /**
@@ -145,9 +105,7 @@ $aid=DB::table('authors')->where('aname',$author)->value('id');
      */
     public function destroy($id)
     {
-          $book = Book::find($id);
-
-    $book->delete();
-    return redirect('books');
+      Book::findOrFail($id)->delete();
+      return redirect()->back();
     }
 }

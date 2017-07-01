@@ -4,71 +4,32 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Validator;
 use App\User;
-use Hash;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\LoginRequest;
 
 class RegisterController extends Controller
 {
-    
 
     public function store(Request $request)
-{
- $validator = Validator::make($request->all(), [
-            'name' => 'required|max:20',  
-	    'email' =>'required|email' ,
-      'phone' => 'required|max:20',
-	    'password' =>'required|min:6' ,
-	    'cpassword' =>'required|same:password' 
-        ]);
+    {
+        $user=new User();
+        $user->formstore($request);
+        return redirect('login');
+    }
 
- $message=array(
-	'cpassword.required' =>'you must fill this first' ,
-	'cpassword.min' =>'this is must be at least 6 charachters' ,
-	'cpassword.same' =>'must be the same of password' );
+    public function login(RegisterRequest $request)
+    {
+      if(Auth::attempt(['email'=>$request->email ,'password'=>$request->password])){
+        return redirect()->intended('books');
+      }
+      return redirect()->back()->with('message', 'Invalid email or password .!');
+    }
 
-  if ($validator->fails()) {
-            return redirect('register')
-                        ->withErrors($validator);               
-        }
-        else{
-
-        	$user=new User();
-        	$user->formstore($request);
-        	 return redirect('login');
-        }
-}
-
-
-
-
-
-public function login(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'email' =>'required|email' ,
-        'password' =>'required|min:6' ,        
-        ]);
-     if ($validator->fails()) {
-            return redirect()->intended('login')
-                        ->withErrors($validator);               
-        }
-        else {
-$email=$request->input('email');
-$password=$request->input('password');
- 
-      if(Auth::attempt(['email'=>$email ,'password'=>$password]))
-          { return redirect()->intended('books'); }
-       else
-           { return redirect()->intended('login'); }
-     }  
-}
-
-public function logout()
-{
-
-   auth()->logout();
-    return redirect('login');
-}
+    public function logout()
+    {
+      Auth::logout();
+      return redirect('login');
+    }
 
 }
