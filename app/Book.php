@@ -21,7 +21,7 @@ class Book extends Model
 
     public function formstore($request)
 {
-	
+
 $name=$request->input('name');
 
 $price=$request->input('price');
@@ -32,16 +32,16 @@ $author=$request->input('author');
 
 $sid=DB::table('sections')->where('sname',$section)->value('id');
 $aid=DB::table('authors')->where('aname',$author)->value('id');
- 
+
    //     $file = array('image' => $request->file('image'));
    //     $destinationPath = 'images/'; // upload path
-     //   $extension = $request->file('image')->getClientOriginalExtension(); 
+     //   $extension = $request->file('image')->getClientOriginalExtension();
      //   $fileName = rand(11111,99999).'.'.$extension; // renaming image
      //  $request->file('image')->move($destinationPath, $fileName);
-   
 
 
-      
+
+
 
 
 
@@ -51,6 +51,6 @@ $aid=DB::table('authors')->where('aname',$author)->value('id');
 	$books->section_id=$sid;
 	$books->author_id=$aid;
 	$books->save();
- 
+
  }
 }

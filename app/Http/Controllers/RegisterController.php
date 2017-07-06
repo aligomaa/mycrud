@@ -11,14 +11,14 @@ use App\Http\Requests\LoginRequest;
 class RegisterController extends Controller
 {
 
-    public function store(Request $request)
+    public function store(RegisterRequest $request)
     {
         $user=new User();
         $user->formstore($request);
         return redirect('login');
     }
 
-    public function login(RegisterRequest $request)
+    public function login(LoginRequest $request)
     {
       if(Auth::attempt(['email'=>$request->email ,'password'=>$request->password])){
         return redirect()->intended('books');
